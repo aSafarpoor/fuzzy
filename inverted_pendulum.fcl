@@ -1,0 +1,87 @@
+FUNCTION_BLOCK Inverted_Pendulum
+
+    VAR_INPUT
+        theta : REAL;
+        theta_dot   :   REAL;
+        theta_dot_dot   :   REAL;
+        x   :   REAL;
+        x_dot : REAL;
+        x_dot_dot   :   REAL;
+
+        (* other vars if needed *)
+    END_VAR
+
+    VAR_OUTPUT
+        F : REAL;
+        (* other vars if needed *)
+    END_VAR
+
+    FUZZIFY theta
+        TERM Zero := (170,0)(180,1)(190,0);
+        TERM NegLow := (180,0)(230,0.5)(270,0);
+        TERM NegHigh := (270,0)(330,1)(360,0);
+        TERM PosLow :=  (90,0)(130,0.5)(180,0);
+        TERM PosHigh := (0,0)(30,1)(90,0);
+        (* terms *)
+    END_FUZZIFY
+
+    FUZZIFY theta_dot
+        TERM Zero := (-1,0)(0,1)(1,0);
+        TERM NegLow := (-2,0)(-1,1)(0,0);
+        TERM NegHigh := (-10,0)(-5,1)(0,0);
+        TERM PosLow :=  (2,0)(1,1)(0,0);
+        TERM PosHigh := (10,0)(5,1)(0,0);
+        TERM NegTooHigh := (-5,0)(-10,1)(-15,0);
+        TERM PosTooHigh := (5,0)(10,1)(15,0);
+        (* terms *)
+    END_FUZZIFY
+
+   
+
+    DEFUZZIFY F
+        TERM Zero := (-1,0)(0,0.4)(1,0);
+        TERM NegLow := (-20,0)(-10,1)(0,0);
+        TERM NegHigh := (0,0)(-20,1)(-30,0);
+        TERM PosLow :=  (0,0)(10,1)(20,0);
+        TERM PosHigh := (0,0)(20,1)(30,0);
+        TERM PosTooHigh := (0,0)(50,1)(70,0);
+        TERM NegTooHigh := (0,0)(-50,1)(-70,0);
+
+        ACCU:MAX;
+        METHOD: COG;
+        DEFAULT := 0;
+        (* terms *)
+    END_DEFUZZIFY
+
+    RULEBLOCK Inverted_Pendulum
+        
+
+        RULE 1: IF (theta IS Zero) AND (theta_dot IS Zero)  THEN (F IS Zero);
+
+        RULE 4: IF (theta IS PosLow) AND (theta_dot IS NegLow) THEN (F IS PosHigh);
+        RULE 5: IF (theta IS PosLow) AND (theta_dot IS Zero) THEN (F IS PosLow);
+        RULE 6: IF (theta IS PosLow) AND (theta_dot IS PosLow) THEN (F IS PosLow);
+        RULE 7: IF (theta IS NegLow) AND (theta_dot IS NegLow) THEN (F IS NegLow);
+        RULE 8: IF (theta IS NegLow) AND (theta_dot IS Zero) THEN (F IS NegLow);
+        RULE 9: IF (theta IS NegLow) AND (theta_dot IS PosLow) THEN (F IS NegHigh);
+
+        RULE 10: IF (theta IS NegLow) AND (theta_dot IS PosHigh) THEN (F IS NegTooHigh);
+        RULE 11: IF (theta IS NegLow) AND (theta_dot IS NegHigh) THEN (F IS PosLow);
+        RULE 12: IF (theta IS PosLow) AND (theta_dot IS PosHigh) THEN (F IS NegLow);
+        RULE 13: IF (theta IS PosLow) AND (theta_dot IS NegHigh) THEN (F IS PosTooHigh);
+
+        RULE 14: IF (theta IS NegHigh) AND (theta_dot IS PosLow) THEN (F IS NegHigh);
+        RULE 15: IF (theta IS NegHigh) AND (theta_dot IS NegLow) THEN (F IS NegTooHigh);
+        RULE 16: IF (theta IS PosHigh) AND (theta_dot IS PosLow) THEN (F IS PosTooHigh);
+        RULE 17: IF (theta IS PosHigh) AND (theta_dot IS NegLow) THEN (F IS PosHigh);
+
+        RULE 18: IF (theta IS NegHigh) AND (theta_dot IS PosHigh) THEN (F IS NegHigh);
+        RULE 19: IF (theta IS NegHigh) AND (theta_dot IS NegHigh) THEN (F IS PosLow);
+        RULE 20: IF (theta IS PosHigh) AND (theta_dot IS PosHigh) THEN (F IS NegLow);
+        RULE 21: IF (theta IS PosHigh) AND (theta_dot IS NegHigh) THEN (F IS PosHigh);
+		
+
+        (* rules *)
+    END_RULEBLOCK
+
+END_FUNCTION_BLOCK
